@@ -24,6 +24,12 @@ var JwtRegularSecretKey string
 var JwtRefreshSecretKey string
 var RegularTokenLifetime string
 
+// Super Admin
+var SuperAdminName string
+var SuperAdminEmail string
+var SuperAdminPassword string
+var SuperAdminNumber string
+
 func IntVariables() {
 	RunMode = os.Getenv("ENVIRONMENT")
 	if RunMode == "" {
@@ -56,4 +62,10 @@ func IntVariables() {
 	JwtRegularSecretKey = os.Getenv("JWT_SECRET_KEY")
 	JwtRefreshSecretKey = os.Getenv("JWT_REFRESH_KEY")
 	RegularTokenLifetime = os.Getenv("REGULAR_TOKEN_LIFETIME")
+
+	// Super Admin
+	SuperAdminName = os.Getenv("SUPER_ADMIN_NAME")
+	SuperAdminEmail = os.Getenv("SUPER_ADMIN_EMAIL")
+	SuperAdminPassword = os.Getenv("SUPER_ADMIN_PASSWORD")
+	SuperAdminNumber = os.Getenv("SUPER_ADMIN_NUMBER")
 }

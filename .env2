@@ -12,3 +12,10 @@ PUBLIC_KEY="blank"
 REGULAR_TOKEN_LIFETIME=300000
 JWT_SECRET_KEY=secret_key_string_for_access_token
 JWT_REFRESH_KEY=secret_key_string_for_refresh_token
+
+
+# Super Admin
+SUPER_ADMIN_NAME=""
+SUPER_ADMIN_EMAIL=""
+SUPER_ADMIN_PASSWORD=""
+SUPER_ADMIN_NUMBER=""

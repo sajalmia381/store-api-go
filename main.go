@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/sajalmia381/store-api/src/api"
 	"github.com/sajalmia381/store-api/src/config"
 	"github.com/sajalmia381/store-api/src/dependency"
@@ -11,7 +13,7 @@ import (
 func main() {
 	server := config.New()
 	db.GetDmManager()
-
+	go intSuperAdmin()
 	go initDefaultUser()
 
 	api.Routes(server)
@@ -29,4 +31,21 @@ func initDefaultUser() {
 		Number:   &num,
 	}
 	userService.Store(payload)
+}
+
+func intSuperAdmin() {
+	if config.SuperAdminEmail != "" {
+		userService := dependency.GetUserService()
+		num, err := strconv.Atoi(config.SuperAdminNumber)
+		if err != nil {
+			num = 1234567891
+		}
+		payload := dtos.UserRegisterDTO{
+			Name:     config.SuperAdminName,
+			Email:    config.SuperAdminEmail,
+			Password: config.SuperAdminPassword,
+			Number:   &num,
+		}
+		userService.Store(payload)
+	}
 }
