@@ -1,8 +1,11 @@
 package v1
 
 import (
+	"log"
+
 	"github.com/labstack/echo/v4"
 	"github.com/sajalmia381/store-api/src/api/common"
+	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/api"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
 	"github.com/sajalmia381/store-api/src/v1/service"
@@ -30,6 +33,12 @@ func (u userApi) Store(c echo.Context) error {
 }
 
 func (u userApi) FindAll(c echo.Context) error {
+	// log.Println("req", c.Request())
+	requesterData, err := utils.GetUserRequestData(c)
+	if err != nil {
+		log.Println("err", err)
+	}
+	log.Println("Requester Data:", requesterData)
 	objects, err := u.userService.FindAll()
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())

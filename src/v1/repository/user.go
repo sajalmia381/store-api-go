@@ -182,7 +182,6 @@ func (r userRepository) UpdateLoginTime(id string) (model.User, error) {
 		log.Println("[ERROR] Update Login time document:", err.Error())
 		panic(err)
 	}
-	log.Println("user", user)
 	return user, nil
 }
 

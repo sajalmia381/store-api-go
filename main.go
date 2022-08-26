@@ -21,7 +21,7 @@ func main() {
 
 func initDefaultUser() {
 	userService := dependency.GetUserService()
-	num := 1816785381
+	num := 1234567891
 	payload := dtos.UserRegisterDTO{
 		Name:     "Anonymous User",
 		Email:    "anonymous@gmail.com",

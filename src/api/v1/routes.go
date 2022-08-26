@@ -2,6 +2,8 @@ package v1
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/sajalmia381/store-api/src/custom_middleware"
 	"github.com/sajalmia381/store-api/src/dependency"
 )
 
@@ -17,11 +19,11 @@ func authRoutes(g *echo.Group) {
 	g.POST("/login", newAuthApi.Login)
 	g.POST("/register", newAuthApi.Register)
 	g.POST("/refresh", newAuthApi.RefreshToken)
-
 }
 
 func userRoutes(g *echo.Group) {
 	newUserApi := NewUserApi(dependency.GetUserService())
+	g.Use(middleware.JWTWithConfig(custom_middleware.AuthMiddlewareConfig()))
 	g.GET("", newUserApi.FindAll)
 	g.POST("", newUserApi.Store)
 	g.GET("/:id", newUserApi.FindById)
@@ -31,6 +33,7 @@ func userRoutes(g *echo.Group) {
 
 func categoryRoutes(g *echo.Group) {
 	newCategoryApi := NewCategoryApi(dependency.GetCategoryService())
+	g.Use(middleware.JWTWithConfig(custom_middleware.AuthMiddlewareConfig()))
 	g.GET("", newCategoryApi.FindAll)
 	g.POST("", newCategoryApi.Store)
 	g.GET("/:slug", newCategoryApi.FindBySlug)
@@ -40,6 +43,7 @@ func categoryRoutes(g *echo.Group) {
 
 func productRoutes(g *echo.Group) {
 	newProductApi := NewProductApi(dependency.GetProductService(), dependency.GetCategoryService())
+	g.Use(middleware.JWTWithConfig(custom_middleware.AuthMiddlewareConfig()))
 	g.GET("", newProductApi.FindAll)
 	g.POST("", newProductApi.Store)
 	g.GET("/:slug", newProductApi.FindBySlug)

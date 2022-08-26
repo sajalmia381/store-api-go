@@ -116,12 +116,12 @@ func (a authApi) RefreshToken(c echo.Context) error {
 	jwt.ParseWithClaims(payload.RefreshToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return a.jwtService.GetRegularTokenSecret(), nil
 	})
-	jsonbody, err := json.Marshal(claims["data"])
+	jsonBody, err := json.Marshal(claims["data"])
 	if err != nil {
 		log.Println(err)
 	}
 	var jwtPayload dtos.JwtPayload
-	err = json.Unmarshal(jsonbody, &jwtPayload)
+	err = json.Unmarshal(jsonBody, &jwtPayload)
 	if err != nil {
 		log.Println("[ERROR] failed to Unmarshal", err.Error())
 		return common.GenerateErrorResponse(c, "[ERROR]: failed to get date from token!", err.Error(), &common.ResponseOption{

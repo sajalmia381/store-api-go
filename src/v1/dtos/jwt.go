@@ -7,10 +7,17 @@ import (
 )
 
 type JwtPayload struct {
-	ID    primitive.ObjectID `json:"id" bson:"_id"`
-	Name  string             `json:"name" bson:"name"`
-	Email string             `json:"email" bson:"email"`
-	Role  string             `json:"role" bson:"role"`
+	ID    primitive.ObjectID `json:"id" bson:"_id" header:"id"`
+	Name  string             `json:"name" bson:"name" header:"name"`
+	Email string             `json:"email" bson:"email" header:"email"`
+	Role  string             `json:"role" bson:"role" header:"role"`
+}
+
+type JwtUserData struct {
+	ID    string `json:"id" bson:"_id" header:"id"`
+	Name  string `json:"name" bson:"name" header:"name"`
+	Email string `json:"email" bson:"email" header:"email"`
+	Role  string `json:"role" bson:"role" header:"role"`
 }
 
 type JwtResponseDto struct {
