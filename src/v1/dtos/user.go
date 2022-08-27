@@ -40,3 +40,8 @@ func (u *UserUpdateDto) Validate() error {
 	}
 	return nil
 }
+
+type UserQuery struct {
+	Status *bool  `json:"status" bson:"status"`
+	Role   string `json:"role" bson:"role"`
+}

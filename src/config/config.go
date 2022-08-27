@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/sajalmia381/store-api/src/constants"
+	"github.com/sajalmia381/store-api/src/enums"
 )
 
 var RunMode string
@@ -33,10 +33,10 @@ var SuperAdminNumber string
 func IntVariables() {
 	RunMode = os.Getenv("ENVIRONMENT")
 	if RunMode == "" {
-		RunMode = string(constants.DEVELOPMENT)
+		RunMode = string(enums.DEVELOPMENT)
 	}
 
-	if RunMode != string(constants.PRODUCTION) {
+	if RunMode != string(enums.PRODUCTION) {
 		err := godotenv.Load()
 		if err != nil {
 			log.Println("[ERROR]: ", err.Error())

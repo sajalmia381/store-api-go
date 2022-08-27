@@ -22,12 +22,12 @@ const (
 
 // Error
 var (
-	invalidIdErr = errors.New("Invalid user id")
+	invalidIdErr = errors.New("invalid user id")
 )
 
 type UserRepository interface {
 	Store(user model.User) (model.User, error)
-	FindAll() ([]model.User, error)
+	FindAll(queryParams dtos.UserQuery) ([]model.User, error)
 	FindById(id string) (model.User, error)
 	FindByEmail(email string) (model.User, error)
 	UpdateById(id string, payload dtos.UserUpdateDto) (model.User, error)
@@ -59,9 +59,19 @@ func (r userRepository) Store(user model.User) (model.User, error) {
 	return user, nil
 }
 
-func (r userRepository) FindAll() ([]model.User, error) {
+func (r userRepository) FindAll(filterData dtos.UserQuery) ([]model.User, error) {
 	var objects []model.User
 	query := bson.D{}
+	if filterData.Role != "" {
+		query = append(query, bson.E{
+			Key: "role", Value: filterData.Role,
+		})
+	}
+	if filterData.Status != nil {
+		query = append(query, bson.E{
+			Key: "status", Value: *filterData.Status,
+		})
+	}
 	coll := r.dm.DB.Collection(UserCollectionName)
 	cursor, err := coll.Find(r.dm.Ctx, query)
 	if err != nil {

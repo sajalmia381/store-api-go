@@ -7,10 +7,11 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
 )
 
-func GetUserRequestData(c echo.Context) (dtos.JwtPayload, error) {
+func GetRequestData(c echo.Context) (dtos.JwtPayload, error) {
 	var userData dtos.JwtPayload
 	_token := c.Get("user")
 	if _token == nil {
@@ -25,4 +26,9 @@ func GetUserRequestData(c echo.Context) (dtos.JwtPayload, error) {
 		return userData, err
 	}
 	return userData, nil
+}
+
+func IsSuperAdmin(c echo.Context) bool {
+	requesterData, err := GetRequestData(c)
+	return err == nil && requesterData.Role == string(enums.ROLE_SUPER_ADMIN)
 }
