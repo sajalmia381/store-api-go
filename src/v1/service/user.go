@@ -37,6 +37,16 @@ func (s userService) Store(payload dtos.UserRegisterDTO) (model.User, error) {
 	user = mergePayloadDataToUser(payload)
 	user.Role = enums.ROLE_CUSTOMER
 	user.Status = true
+	// No dependent
+	user.ID = primitive.NewObjectID()
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println("[ERROR] convert string to hash password:", err.Error())
+		return user, err
+	}
+	user.Password = string(hashedPassword)
+	user.CreatedAt = time.Now().UTC()
+	user.UpdatedAt = time.Now().UTC()
 	newUser, err := s.repo.Store(user)
 	return newUser, err
 }
@@ -47,17 +57,50 @@ func (s userService) FindAll(query dtos.UserQuery) ([]model.User, error) {
 }
 
 func (s userService) FindById(id string) (model.User, error) {
-	user, err := s.repo.FindById(id)
+	var user model.User
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return user, errors.New("invalid user id")
+	}
+	user, err = s.repo.FindById(_id)
 	return user, err
 }
 
-func (s userService) UpdateById(id string, payload dtos.UserUpdateDto) (model.User, error) {
-	user, err := s.repo.UpdateById(id, payload)
-	return user, err
+func (s userService) UpdateById(id string, formData dtos.UserUpdateDto) (model.User, error) {
+	var user model.User
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return user, err
+	}
+	payload := primitive.M{}
+	if formData.Name == "" {
+		payload["name"] = user.Name
+	}
+
+	if formData.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(formData.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Println("[ERROR] convert string to hash password:", err.Error())
+			panic(err)
+		}
+		payload["password"] = string(hashedPassword)
+	}
+	if formData.Number == nil {
+		payload["number"] = user.Number
+	}
+	if formData.Status == nil {
+		payload["status"] = &user.Status
+	}
+	newUser, err := s.repo.UpdateById(_id, payload)
+	return newUser, err
 }
 
 func (s userService) DeleteById(id string) error {
-	_, err := s.repo.DeleteById(id)
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid user id")
+	}
+	_, err = s.repo.DeleteById(_id)
 	return err
 }
 

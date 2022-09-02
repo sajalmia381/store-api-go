@@ -7,13 +7,14 @@ import (
 	"github.com/sajalmia381/store-api/src/v1/dtos"
 	"github.com/sajalmia381/store-api/src/v1/model"
 	"github.com/sajalmia381/store-api/src/v1/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AuthService interface {
 	Login(payload dtos.LoginPayload) (model.User, error)
 	Register(payload dtos.RegisterPayload) (model.User, error)
 	RefreshToken(payload dtos.RefreshTokenPayload)
-	UpdateUserLoginTime(id string) (model.User, error)
+	UpdateUserLoginTime(id primitive.ObjectID) (model.User, error)
 }
 
 type authService struct {
@@ -46,7 +47,7 @@ func (s authService) RefreshToken(payload dtos.RefreshTokenPayload) {
 	panic("not implemented") // TODO: Implement
 }
 
-func (s authService) UpdateUserLoginTime(id string) (model.User, error) {
+func (s authService) UpdateUserLoginTime(id primitive.ObjectID) (model.User, error) {
 	user, err := s.userRepo.UpdateLoginTime(id)
 	return user, err
 }

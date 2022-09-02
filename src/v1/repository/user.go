@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/v1/db"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
 	"github.com/sajalmia381/store-api/src/v1/model"
@@ -12,27 +13,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/bcrypt"
-)
-
-// Collection Name
-const (
-	UserCollectionName = "users"
-)
-
-// Error
-var (
-	invalidIdErr = errors.New("invalid user id")
 )
 
 type UserRepository interface {
 	Store(user model.User) (model.User, error)
 	FindAll(queryParams dtos.UserQuery) ([]model.User, error)
-	FindById(id string) (model.User, error)
+	FindById(id primitive.ObjectID) (model.User, error)
 	FindByEmail(email string) (model.User, error)
-	UpdateById(id string, payload dtos.UserUpdateDto) (model.User, error)
-	UpdateLoginTime(id string) (model.User, error)
-	DeleteById(id string) (*mongo.DeleteResult, error)
+	UpdateById(id primitive.ObjectID, payload primitive.M) (model.User, error)
+	UpdateLoginTime(id primitive.ObjectID) (model.User, error)
+	DeleteById(id primitive.ObjectID) (*mongo.DeleteResult, error)
 }
 
 type userRepository struct {
@@ -40,18 +30,8 @@ type userRepository struct {
 }
 
 func (r userRepository) Store(user model.User) (model.User, error) {
-	user.ID = primitive.NewObjectID()
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Println("[ERROR] convert string to hash password:", err.Error())
-		return user, err
-	}
-	user.Password = string(hashedPassword)
-	user.CreatedAt = time.Now().UTC()
-	user.UpdatedAt = time.Now().UTC()
-
-	coll := r.dm.DB.Collection(UserCollectionName)
-	_, err = coll.InsertOne(r.dm.Ctx, user)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
+	_, err := coll.InsertOne(r.dm.Ctx, user)
 	if err != nil {
 		log.Println("[ERROR] Insert document:", err.Error())
 		return user, err
@@ -72,7 +52,7 @@ func (r userRepository) FindAll(filterData dtos.UserQuery) ([]model.User, error)
 			Key: "status", Value: *filterData.Status,
 		})
 	}
-	coll := r.dm.DB.Collection(UserCollectionName)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
 	cursor, err := coll.Find(r.dm.Ctx, query)
 	if err != nil {
 		return objects, err
@@ -84,16 +64,12 @@ func (r userRepository) FindAll(filterData dtos.UserQuery) ([]model.User, error)
 	return objects, nil
 }
 
-func (r userRepository) FindById(id string) (model.User, error) {
-	user := model.User{}
-	_id, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return user, invalidIdErr
-	}
+func (r userRepository) FindById(id primitive.ObjectID) (model.User, error) {
+	var user model.User
 	query := bson.D{
-		{Key: "_id", Value: _id},
+		{Key: "_id", Value: id},
 	}
-	coll := r.dm.DB.Collection(UserCollectionName)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
 	result := coll.FindOne(r.dm.Ctx, query)
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -110,7 +86,7 @@ func (r userRepository) FindByEmail(email string) (model.User, error) {
 	filter := bson.D{
 		{Key: "email", Value: email},
 	}
-	coll := r.dm.DB.Collection(UserCollectionName)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
 	result := coll.FindOne(r.dm.Ctx, filter)
 
 	if err := result.Decode(&user); err != nil {
@@ -124,40 +100,18 @@ func (r userRepository) FindByEmail(email string) (model.User, error) {
 	return user, nil
 }
 
-func (r userRepository) UpdateById(id string, payload dtos.UserUpdateDto) (model.User, error) {
-	user, err := r.FindById(id)
-	if err != nil {
-		return user, err
-	}
-	payload.UpdateAt = time.Now().UTC()
-	if payload.Name == "" {
-		payload.Name = user.Name
-	}
-	if payload.Password == "" {
-		payload.Password = user.Password
-	} else {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
-		if err != nil {
-			log.Println("[ERROR] convert string to hash password:", err.Error())
-			panic(err)
-		}
-		payload.Password = string(hashedPassword)
-	}
-	if payload.Number == nil {
-		payload.Number = user.Number
-	}
-	if payload.Status == nil {
-		payload.Status = &user.Status
-	}
+func (r userRepository) UpdateById(id primitive.ObjectID, payload primitive.M) (model.User, error) {
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	payload["updatedAt"] = time.Now().UTC()
 	filter := bson.D{
-		{Key: "_id", Value: user.ID},
+		{Key: "_id", Value: id},
 	}
 	update := bson.D{
 		{Key: "$set", Value: payload},
 	}
-	coll := r.dm.DB.Collection(UserCollectionName)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
 	result := coll.FindOneAndUpdate(r.dm.Ctx, filter, update, opts)
+	var user model.User
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return user, err
@@ -169,21 +123,18 @@ func (r userRepository) UpdateById(id string, payload dtos.UserUpdateDto) (model
 	return user, nil
 }
 
-func (r userRepository) UpdateLoginTime(id string) (model.User, error) {
-	user, err := r.FindById(id)
-	if err != nil {
-		return user, err
-	}
+func (r userRepository) UpdateLoginTime(id primitive.ObjectID) (model.User, error) {
+	var user model.User
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
 	filter := bson.D{
-		{Key: "_id", Value: user.ID},
+		{Key: "_id", Value: id},
 	}
 	update := bson.D{
 		{Key: "$set", Value: bson.M{
 			"lastLoginAt": time.Now().UTC(),
 		}},
 	}
-	coll := r.dm.DB.Collection(UserCollectionName)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
 	result := coll.FindOneAndUpdate(r.dm.Ctx, filter, update, opts)
 	if err := result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -195,16 +146,12 @@ func (r userRepository) UpdateLoginTime(id string) (model.User, error) {
 	return user, nil
 }
 
-func (r userRepository) DeleteById(id string) (*mongo.DeleteResult, error) {
-	_id, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, invalidIdErr
-	}
+func (r userRepository) DeleteById(id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	query := bson.D{
-		{Key: "_id", Value: _id},
+		{Key: "_id", Value: id},
 	}
 
-	coll := r.dm.DB.Collection(UserCollectionName)
+	coll := r.dm.DB.Collection(string(enums.USER_COLLECTION_NAME))
 	result, err := coll.DeleteOne(r.dm.Ctx, query)
 	if err != nil {
 		return nil, err

@@ -17,5 +17,5 @@ type User struct {
 	Role        enums.Role         `json:"role" bson:"role"`
 	LastLoginAt *time.Time         `json:"lastLoginAt" bson:"lastLoginAt"`
 	CreatedAt   time.Time          `json:"createdAt" bson:"createdAt"`
-	UpdatedAt   time.Time          `json:"updateAt" bson:"updateAt"`
+	UpdatedAt   time.Time          `json:"updatedAt" bson:"updatedAt"`
 }

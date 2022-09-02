@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log"
 
+	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/db"
-	"github.com/sajalmia381/store-api/src/v1/dtos"
 	"github.com/sajalmia381/store-api/src/v1/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,15 +14,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	CategoryCollectionName = "categories"
-)
-
 type CategoryRepository interface {
 	Store(category model.Category) (model.Category, error)
 	FindAll() ([]model.Category, error)
 	FindBySlug(slug string) (model.Category, error)
-	UpdateBySlug(slug string, payload dtos.CategoryUpdateDto) (model.Category, error)
+	UpdateBySlug(slug string, payload primitive.M) (model.Category, error)
 	DeleteBySlug(slug string) (*mongo.DeleteResult, error)
 	PushProductToCategory(categoryId primitive.ObjectID, productId primitive.ObjectID) error
 	RemoveProductFromCategory(categoryId primitive.ObjectID, productId primitive.ObjectID) error
@@ -34,10 +30,8 @@ type categoryRepository struct {
 }
 
 func (r categoryRepository) Store(category model.Category) (model.Category, error) {
-	category.ID = primitive.NewObjectID()
-	coll := r.dm.DB.Collection(CategoryCollectionName)
-	category.Slug = utils.GenerateUniqueSlug(category.Name, coll)
-	category.Products = []primitive.ObjectID{}
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
+	category.Slug = utils.GenerateUniqueSlug(category.Name, string(enums.CATEGORY_COLLECTION_NAME))
 	_, err := coll.InsertOne(r.dm.Ctx, &category)
 	if err != nil {
 		return category, nil
@@ -47,7 +41,7 @@ func (r categoryRepository) Store(category model.Category) (model.Category, erro
 
 func (r categoryRepository) FindAll() ([]model.Category, error) {
 	var objects []model.Category
-	coll := r.dm.DB.Collection(CategoryCollectionName)
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 	filter := bson.D{}
 	result, err := coll.Find(r.dm.Ctx, filter)
 	if err != nil {
@@ -65,7 +59,7 @@ func (r categoryRepository) FindBySlug(slug string) (model.Category, error) {
 	filter := bson.D{
 		{Key: "slug", Value: slug},
 	}
-	coll := r.dm.DB.Collection(CategoryCollectionName)
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 	result := coll.FindOne(r.dm.Ctx, filter)
 	if err := result.Decode(&category); err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -77,33 +71,15 @@ func (r categoryRepository) FindBySlug(slug string) (model.Category, error) {
 	return category, nil
 }
 
-func (r categoryRepository) UpdateBySlug(slug string, payload dtos.CategoryUpdateDto) (model.Category, error) {
-	category, err := r.FindBySlug(slug)
-	if err != nil {
-		return category, err
-	}
-	coll := r.dm.DB.Collection(CategoryCollectionName)
-	payloadMap := map[string]interface{}{}
-	if payload.Name != "" {
-		payloadMap["name"] = payload.Name
-	}
-
-	if payload.Description != "" {
-		payloadMap["Description"] = payload.Description
-	}
-	if payload.UpdateSlug {
-		if payload.Name != "" {
-			payloadMap["slug"] = utils.GenerateUniqueSlug(payload.Name, coll, category.Slug)
-		} else {
-			payloadMap["slug"] = utils.GenerateUniqueSlug(category.Name, coll, category.Slug)
-		}
-	}
+func (r categoryRepository) UpdateBySlug(slug string, payload primitive.M) (model.Category, error) {
+	var category model.Category
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 
 	filter := bson.D{
 		{Key: "slug", Value: slug},
 	}
 	update := bson.D{
-		{Key: "$set", Value: payloadMap},
+		{Key: "$set", Value: payload},
 	}
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
@@ -111,6 +87,9 @@ func (r categoryRepository) UpdateBySlug(slug string, payload dtos.CategoryUpdat
 	result := coll.FindOneAndUpdate(r.dm.Ctx, filter, update, opts)
 	if err := result.Decode(&category); err != nil {
 		// Document No exception implement in top
+		if err == mongo.ErrNoDocuments {
+			return category, errors.New("category is not exists")
+		}
 		log.Println("[ERROR] Delete document count", err)
 		panic(err)
 	}
@@ -121,7 +100,7 @@ func (r categoryRepository) DeleteBySlug(slug string) (*mongo.DeleteResult, erro
 	filter := bson.D{
 		{Key: "slug", Value: slug},
 	}
-	coll := r.dm.DB.Collection(CategoryCollectionName)
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 	result, err := coll.DeleteOne(r.dm.Ctx, filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -145,7 +124,7 @@ func (r categoryRepository) PushProductToCategory(categoryId primitive.ObjectID,
 			{Key: "products", Value: productId},
 		}},
 	}
-	coll := r.dm.DB.Collection(CategoryCollectionName)
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 	_, err := coll.UpdateOne(r.dm.Ctx, filter, update)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -165,7 +144,7 @@ func (r categoryRepository) RemoveProductFromCategory(categoryId primitive.Objec
 			{Key: "products", Value: productId},
 		}},
 	}
-	coll := r.dm.DB.Collection(CategoryCollectionName)
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 	_, err := coll.UpdateOne(r.dm.Ctx, filter, update)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -195,7 +174,7 @@ func (r categoryRepository) ChangeProductInCategory(oldCategoryId primitive.Obje
 			},
 		},
 	}
-	coll := r.dm.DB.Collection(CategoryCollectionName)
+	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
 	_, err := coll.UpdateOne(r.dm.Ctx, oldFilter, oldUpdate)
 	_, newErr := coll.UpdateOne(r.dm.Ctx, newFilter, newUpdate)
 

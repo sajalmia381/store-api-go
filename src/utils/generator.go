@@ -12,8 +12,9 @@ import (
 
 var smallChars = "abcdefghijklmnopqrstuvwxyz"
 
-func GenerateUniqueSlug(title string, collection *mongo.Collection, skip_slugs ...string) string {
+func GenerateUniqueSlug(title string, collectionName string, skip_slugs ...string) string {
 	newSlug := slug.MakeLang(title, "en")
+	collection := db.GetDmManager().DB.Collection(collectionName)
 	for {
 		result := collection.FindOne(db.GetDmManager().Ctx, bson.M{"slug": newSlug})
 		if err := result.Err(); err != nil {
@@ -32,8 +33,17 @@ func GenerateUniqueSlug(title string, collection *mongo.Collection, skip_slugs .
 	return newSlug
 }
 
+func GenerateFakeUniqueSlug(title string, withPrefix bool, skip_slugs ...string) string {
+	// For Fake generator
+	newSlug := slug.MakeLang(title, "en")
+	if withPrefix {
+		newSlug = newSlug + "-" + GenerateRandomString(5, &smallChars)
+	}
+	return newSlug
+}
+
 // Generate Random String
-func mergeCharsets(charset ...*string) string {
+func mergeCharSets(charset ...*string) string {
 	_charset := ""
 	for _, char := range charset {
 		if char == nil {
@@ -49,10 +59,10 @@ func mergeCharsets(charset ...*string) string {
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
-func GenerateRandomString(length int16, charsets ...*string) string {
+func GenerateRandomString(length int16, charSets ...*string) string {
 	_charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	if len(charsets) > 0 {
-		_charset = mergeCharsets(charsets...)
+	if len(charSets) > 0 {
+		_charset = mergeCharSets(charSets...)
 	}
 	b := make([]byte, length)
 	for i := range b {

@@ -58,7 +58,7 @@ func (a authApi) Login(c echo.Context) error {
 			HttpCode: http.StatusInternalServerError,
 		})
 	}
-	_, err = a.authService.UpdateUserLoginTime(user.ID.Hex())
+	_, err = a.authService.UpdateUserLoginTime(user.ID)
 	if err != nil {
 		log.Println("Failed to update user login time", err.Error())
 	}

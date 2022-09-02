@@ -1,10 +1,14 @@
 package v1
 
 import (
+	"log"
+
 	"github.com/labstack/echo/v4"
 	"github.com/sajalmia381/store-api/src/api/common"
+	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/api"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
+	"github.com/sajalmia381/store-api/src/v1/model"
 	"github.com/sajalmia381/store-api/src/v1/service"
 )
 
@@ -20,7 +24,16 @@ func (p productApi) Store(c echo.Context) error {
 	if err := formData.Validate(); err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
-	product, err := p.productService.Store(formData)
+	isSuperAdmin := utils.IsSuperAdmin(c)
+	var (
+		product model.Product
+		err     error
+	)
+	if !isSuperAdmin {
+		product, err = p.productService.FakeStore(formData)
+	} else {
+		product, err = p.productService.Store(formData)
+	}
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
@@ -50,7 +63,16 @@ func (p productApi) UpdateBySlug(c echo.Context) error {
 	if err := c.Bind(&formData); err != nil {
 		return common.GenerateErrorResponse(c, nil, "Failed to bind data")
 	}
-	product, err := p.productService.UpdateBySlug(slug, formData)
+	isSuperAdmin := utils.IsSuperAdmin(c)
+	var (
+		product model.Product
+		err     error
+	)
+	if !isSuperAdmin {
+		product, err = p.productService.FakeUpdateBySlug(slug, formData)
+	} else {
+		product, err = p.productService.UpdateBySlug(slug, formData)
+	}
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
@@ -59,7 +81,15 @@ func (p productApi) UpdateBySlug(c echo.Context) error {
 
 func (p productApi) DeleteBySlug(c echo.Context) error {
 	slug := c.Param("slug")
-	_, err := p.productService.DeleteBySlug(slug)
+	isSuperAdmin := utils.IsSuperAdmin(c)
+	var (
+		err error
+	)
+	if !isSuperAdmin {
+		_, err = p.productService.FindBySlug(slug)
+	} else {
+		_, err = p.productService.DeleteBySlug(slug)
+	}
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}

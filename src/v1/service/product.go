@@ -3,7 +3,10 @@ package service
 import (
 	"errors"
 	"log"
+	"time"
 
+	"github.com/sajalmia381/store-api/src/enums"
+	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
 	"github.com/sajalmia381/store-api/src/v1/model"
 	"github.com/sajalmia381/store-api/src/v1/repository"
@@ -17,6 +20,9 @@ type ProductService interface {
 	FindBySlug(slug string) (model.Product, error)
 	UpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error)
 	DeleteBySlug(slug string) (*mongo.DeleteResult, error)
+	// Fake
+	FakeStore(payload dtos.ProductStoreDto) (model.Product, error)
+	FakeUpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error)
 }
 
 type productService struct {
@@ -35,6 +41,11 @@ func (p productService) Store(payload dtos.ProductStoreDto) (model.Product, erro
 		return product, errors.New("category id is not valid")
 	}
 	product.Category = &catId
+	// No dep
+	product.ID = primitive.NewObjectID()
+	product.CreatedAt = time.Now().UTC()
+	product.UpdatedAt = time.Now().UTC()
+	product.Active = true
 	product, err = p.repo.Store(product)
 	if err != nil {
 		return product, err
@@ -60,37 +71,45 @@ func (p productService) FindBySlug(slug string) (model.Product, error) {
 	return product, err
 }
 
-func (p productService) UpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error) {
-	product, err := p.FindBySlug(slug)
-	if err != nil {
-		return product, err
+func (p productService) UpdateBySlug(slug string, formData dtos.ProductUpdateDto) (model.Product, error) {
+	payload := primitive.M{}
+
+	if formData.Title == "" {
+		payload["title"] = formData.Title
+	}
+	if formData.Price == nil {
+		payload["price"] = &formData.Price
+	}
+	if formData.Description == "" {
+		payload["description"] = formData.Description
+	}
+	if formData.Category != nil {
+		payload["category"] = formData.Category
+	}
+	if formData.UpdateSlug && formData.Title != "" {
+		payload["slug"] = utils.GenerateUniqueSlug(formData.Title, string(enums.PRODUCT_COLLECTION_NAME), slug)
 	}
 
-	log.Println(payload.Category, product.Category)
-
-	isCategoryChange := payload.Category.Hex() != "" && payload.Category.Hex() != product.Category.Hex()
-	log.Println(isCategoryChange)
-	newProduct, err := p.repo.UpdateOne(product, payload)
-	if err == nil {
-		log.Println(payload.Category, product.Category)
-		log.Println(payload.Category.Hex() != "" && payload.Category.Hex() != product.Category.Hex())
-		if isCategoryChange {
-			go func() {
-				err := p.categoryRepo.ChangeProductInCategory(*product.Category, *payload.Category, product.ID)
-				if err != nil {
-					log.Println("[ERROR update product category change]:", err.Error())
-				}
-			}()
-		}
-	}
-	return newProduct, err
+	// isCategoryChange := formData.Category.Hex() != "" && formData.Category.Hex() != product.Category.Hex()
+	// log.Println(isCategoryChange)
+	product, err := p.repo.UpdateBySlug(slug, payload)
+	// if err == nil {
+	// 	log.Println(formData.Category, formData.Category)
+	// 	log.Println(formData.Category.Hex() != "" && formData.Category.Hex() != product.Category.Hex())
+	// 	if isCategoryChange {
+	// 		go func() {
+	// 			err := p.categoryRepo.ChangeProductInCategory(*product.Category, *formData.Category, product.ID)
+	// 			if err != nil {
+	// 				log.Println("[ERROR update product category change]:", err.Error())
+	// 			}
+	// 		}()
+	// 	}
+	// }
+	return product, err
 }
 
 func (p productService) DeleteBySlug(slug string) (*mongo.DeleteResult, error) {
-	product, err := p.repo.FindBySlug(slug)
-	if err != nil {
-		return nil, err
-	}
+	var product model.Product
 	result, err := p.repo.DeleteBySlug(slug)
 	if err == nil {
 		if product.Category.Hex() != "" {
@@ -104,6 +123,52 @@ func (p productService) DeleteBySlug(slug string) (*mongo.DeleteResult, error) {
 
 	}
 	return result, err
+}
+
+func (p productService) FakeStore(payload dtos.ProductStoreDto) (model.Product, error) {
+	product := model.Product{
+		Title:       payload.Title,
+		Description: *payload.Description,
+		Price:       *payload.Price,
+	}
+	catId, err := primitive.ObjectIDFromHex(payload.Category)
+	if err != nil {
+		return product, errors.New("category id is not valid")
+	}
+	product.Category = &catId
+	// No dep
+	product.ID = primitive.NewObjectID()
+	product.CreatedAt = time.Now().UTC()
+	product.UpdatedAt = time.Now().UTC()
+	product.Active = true
+	product.Slug = utils.GenerateFakeUniqueSlug(product.Title, false)
+	if err != nil {
+		return product, err
+	}
+	return product, nil
+}
+
+func (p productService) FakeUpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error) {
+	product, err := p.FindBySlug(slug)
+	if err != nil {
+		return product, err
+	}
+	if payload.Title != "" {
+		product.Title = payload.Title
+	}
+	if payload.Price != nil {
+		product.Price = *payload.Price
+	}
+	if payload.Description != "" {
+		product.Description = payload.Description
+	}
+	if payload.Category != nil {
+		product.Category = payload.Category
+	}
+	if payload.UpdateSlug && payload.Title != "" {
+		product.Slug = utils.GenerateFakeUniqueSlug(payload.Title, false)
+	}
+	return product, err
 }
 
 func NewProductService(repo repository.ProductRepository, categoryRepo repository.CategoryRepository) ProductService {

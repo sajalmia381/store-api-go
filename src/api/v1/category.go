@@ -3,8 +3,10 @@ package v1
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/sajalmia381/store-api/src/api/common"
+	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/api"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
+	"github.com/sajalmia381/store-api/src/v1/model"
 	"github.com/sajalmia381/store-api/src/v1/service"
 )
 
@@ -14,13 +16,22 @@ type categoryApi struct {
 
 func (cat categoryApi) Store(c echo.Context) error {
 	var formData dtos.CategoryStoreDto
-	if err := formData.Validate(); err != nil {
-		return common.GenerateErrorResponse(c, nil, err.Error())
-	}
 	if err := c.Bind(&formData); err != nil {
 		return common.GenerateErrorResponse(c, err, "Failed to bind data")
 	}
-	category, err := cat.categoryService.Store(formData)
+	if err := formData.Validate(); err != nil {
+		return common.GenerateErrorResponse(c, nil, err.Error())
+	}
+	isSuperAdmin := utils.IsSuperAdmin(c)
+	var (
+		category model.Category
+		err      error
+	)
+	if !isSuperAdmin {
+		category = cat.categoryService.FakeStore(formData)
+	} else {
+		category, err = cat.categoryService.Store(formData)
+	}
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
@@ -50,7 +61,16 @@ func (cat categoryApi) UpdateBySlug(c echo.Context) error {
 	if err := c.Bind(&formData); err != nil {
 		return common.GenerateErrorResponse(c, formData, "Failed to bind data")
 	}
-	category, err := cat.categoryService.UpdateBySlug(slug, formData)
+	isSuperAdmin := utils.IsSuperAdmin(c)
+	var (
+		category model.Category
+		err      error
+	)
+	if !isSuperAdmin {
+		category, err = cat.categoryService.FakeUpdateBySlug(slug, formData)
+	} else {
+		category, err = cat.categoryService.UpdateBySlug(slug, formData)
+	}
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
@@ -59,7 +79,15 @@ func (cat categoryApi) UpdateBySlug(c echo.Context) error {
 
 func (cat categoryApi) DeleteBySlug(c echo.Context) error {
 	slug := c.Param("slug")
-	_, err := cat.categoryService.DeleteBySlug(slug)
+	isSuperAdmin := utils.IsSuperAdmin(c)
+	var (
+		err error
+	)
+	if !isSuperAdmin {
+		_, err = cat.categoryService.FindBySlug(slug)
+	} else {
+		_, err = cat.categoryService.DeleteBySlug(slug)
+	}
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
