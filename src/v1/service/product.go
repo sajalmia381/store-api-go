@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/sajalmia381/store-api/src/api/common"
 	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
@@ -16,7 +17,7 @@ import (
 
 type ProductService interface {
 	Store(payload dtos.ProductStoreDto) (model.Product, error)
-	FindAll() ([]dtos.ProductResponseDto, error)
+	FindAll(queryParams dtos.ProductQueryParams) ([]dtos.ProductResponseDto, common.MetaData, error)
 	FindBySlug(slug string) (model.Product, error)
 	UpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error)
 	DeleteBySlug(slug string) (*mongo.DeleteResult, error)
@@ -61,9 +62,9 @@ func (p productService) Store(payload dtos.ProductStoreDto) (model.Product, erro
 	return product, nil
 }
 
-func (p productService) FindAll() ([]dtos.ProductResponseDto, error) {
-	products, err := p.repo.FindAll()
-	return products, err
+func (p productService) FindAll(queryParams dtos.ProductQueryParams) ([]dtos.ProductResponseDto, common.MetaData, error) {
+	products, metaData, err := p.repo.FindAll(queryParams)
+	return products, metaData, err
 }
 
 func (p productService) FindBySlug(slug string) (model.Product, error) {

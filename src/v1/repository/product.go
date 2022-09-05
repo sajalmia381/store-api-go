@@ -3,8 +3,10 @@ package repository
 import (
 	"errors"
 	"log"
+	"math"
 	"time"
 
+	"github.com/sajalmia381/store-api/src/api/common"
 	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/db"
@@ -18,7 +20,7 @@ import (
 
 type ProductRepository interface {
 	Store(product model.Product) (model.Product, error)
-	FindAll() ([]dtos.ProductResponseDto, error)
+	FindAll(queryParams dtos.ProductQueryParams) ([]dtos.ProductResponseDto, common.MetaData, error)
 	FindBySlug(slug string) (model.Product, error)
 	UpdateBySlug(slug string, payload primitive.M) (model.Product, error)
 	DeleteBySlug(slug string) (*mongo.DeleteResult, error)
@@ -41,8 +43,59 @@ func (p productRepository) Store(product model.Product) (model.Product, error) {
 	return product, nil
 }
 
-func (p productRepository) FindAll() ([]dtos.ProductResponseDto, error) {
+func (p productRepository) FindAll(queryParams dtos.ProductQueryParams) ([]dtos.ProductResponseDto, common.MetaData, error) {
 	var objects []dtos.ProductResponseDto
+	var aggPipeline mongo.Pipeline
+	if queryParams.Search != "" {
+		aggPipeline = append(aggPipeline, bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "$or", Value: bson.A{
+					bson.M{"title": bson.M{"$regex": primitive.Regex{Pattern: queryParams.Search, Options: "i"}}},
+					bson.M{"description": bson.M{"$regex": primitive.Regex{Pattern: queryParams.Search, Options: "i"}}},
+				}},
+			}},
+		})
+	}
+
+	if queryParams.Sort == enums.DESCENDING {
+		aggPipeline = append(aggPipeline, bson.D{
+			{Key: "$sort", Value: bson.M{
+				"createdAt": -1,
+			}},
+		})
+	}
+	coll := p.dm.DB.Collection(string(enums.PRODUCT_COLLECTION_NAME))
+	// Pagination
+	var metaData common.MetaData
+	if queryParams.Limit != 0 {
+		// MetaData Calc
+		totalProducts, err := coll.CountDocuments(p.dm.Ctx, bson.M{})
+		if err != nil {
+			panic(err)
+		}
+		metaData.TotalElements = uint64(totalProducts)
+		metaData.PerPage = queryParams.Limit
+		if queryParams.Page <= 0 {
+			queryParams.Page = 1
+		}
+		metaData.CurrentPage = queryParams.Page
+		metaData.TotalPages = uint64(math.Round(float64(totalProducts) / float64(queryParams.Limit)))
+		if metaData.CurrentPage < metaData.TotalPages {
+			_nextPage := metaData.CurrentPage + 1
+			metaData.NextPage = &_nextPage
+		}
+		if metaData.CurrentPage > 1 {
+			_prevPage := metaData.CurrentPage - 1
+			metaData.PrevPage = &_prevPage
+		}
+		_skipItems := metaData.PerPage * (metaData.CurrentPage - 1)
+		skipStage := bson.D{{Key: "$skip", Value: _skipItems}}
+		limitStage := bson.D{{Key: "$limit", Value: metaData.PerPage}}
+		aggPipeline = append(aggPipeline, skipStage, limitStage)
+	}
+	// end pagination
+
+	// ForeignKey Aggregation
 	categoryLookup := bson.D{
 		{
 			Key: "$lookup", Value: bson.M{
@@ -80,24 +133,24 @@ func (p productRepository) FindAll() ([]dtos.ProductResponseDto, error) {
 		},
 	}
 
-	aggPipeline := mongo.Pipeline{
-		categoryLookup,
-		categoryUnwind,
-		userLookup,
-		userUnwind,
-	}
+	aggPipeline = append(aggPipeline, categoryLookup, categoryUnwind, userLookup, userUnwind)
 
-	coll := p.dm.DB.Collection(string(enums.PRODUCT_COLLECTION_NAME))
 	cursor, err := coll.Aggregate(p.dm.Ctx, aggPipeline)
 	if err != nil {
-		return objects, err
+		if queryParams.Limit != 0 {
+			return objects, metaData, err
+		}
+		return objects, metaData, err
 	}
-
 	if err = cursor.All(p.dm.Ctx, &objects); err != nil {
 		log.Println("[ERROR]", err)
 		panic(err)
 	}
-	return objects, nil
+	log.Println("objects", objects)
+	if queryParams.Limit != 0 {
+		return objects, metaData, nil
+	}
+	return objects, metaData, nil
 }
 
 func (p productRepository) FindBySlug(slug string) (model.Product, error) {

@@ -7,10 +7,12 @@ import (
 )
 
 type MetaData struct {
-	CurrentPage   int
-	PerPage       int
-	TotalPages    int
-	TotalElements int
+	CurrentPage   uint64  `json:"currentPage"`
+	PerPage       uint64  `json:"perPage"`
+	TotalPages    uint64  `json:"totalPages"`
+	TotalElements uint64  `json:"totalElements"`
+	NextPage      *uint64 `json:"nextPage"`
+	PrevPage      *uint64 `json:"prevPage"`
 }
 
 type ResponseDTO struct {
@@ -19,11 +21,15 @@ type ResponseDTO struct {
 	Data    interface{} `json:"data" bson:"data"`
 }
 
-type PaginationResponseDTO struct {
-	Message  string      `json:"message" bson:"message"`
-	Status   string      `json:"status" bson:"status"`
-	Data     interface{} `json:"data" bson:"data"`
+type PaginateDataDTO struct {
+	Content  interface{} `json:"content" bson:"content"`
 	MetaData *MetaData   `json:"metadata" bson:"metadata"`
+}
+
+type PaginationResponseDTO struct {
+	Message string          `json:"message" bson:"message"`
+	Status  string          `json:"status" bson:"status"`
+	Data    PaginateDataDTO `json:"data" bson:"data"`
 }
 
 type ResponseOption struct {
@@ -60,10 +66,12 @@ func GenerateSuccessResponse(c echo.Context, data interface{}, message string, o
 	}
 	if option.MetaData != nil {
 		return c.JSON(_httpCode, &PaginationResponseDTO{
-			Data:     data,
-			Message:  message,
-			Status:   _statusText,
-			MetaData: option.MetaData,
+			Data: PaginateDataDTO{
+				MetaData: option.MetaData,
+				Content:  data,
+			},
+			Message: message,
+			Status:  _statusText,
 		})
 	}
 

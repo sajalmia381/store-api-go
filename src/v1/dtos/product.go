@@ -70,3 +70,10 @@ type ProductResponseDto struct {
 	UpdatedAt   time.Time          `json:"updatedAt" bson:"updatedAt"`
 	Active      bool               `json:"active" bson:"active"`
 }
+
+type ProductQueryParams struct {
+	Limit  uint64     `json:"limit" query:"limit"`
+	Page   uint64     `json:"page" query:"page"`
+	Search string     `json:"q" query:"q"`
+	Sort   enums.Sort `json:"sort" query:"sort"`
+}

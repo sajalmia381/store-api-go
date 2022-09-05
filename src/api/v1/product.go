@@ -2,6 +2,7 @@ package v1
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sajalmia381/store-api/src/api/common"
@@ -41,11 +42,25 @@ func (p productApi) Store(c echo.Context) error {
 }
 
 func (p productApi) FindAll(c echo.Context) error {
-	products, err := p.productService.FindAll()
+	var queryParams dtos.ProductQueryParams
+	if err := (&echo.DefaultBinder{}).BindQueryParams(c, &queryParams); err != nil {
+		log.Println("err", err)
+	}
+	products, metaData, err := p.productService.FindAll(queryParams)
 	if err != nil {
 		return common.GenerateErrorResponse(c, nil, err.Error())
 	}
-	return common.GenerateSuccessResponse(c, products, "Success! Product list")
+	if metaData.PerPage != 0 {
+		return common.GenerateSuccessResponse(c, products, "Success! Product list", &common.ResponseOption{
+			MetaData: &metaData,
+		})
+	}
+	if len(products) > 0 {
+		return common.GenerateSuccessResponse(c, products, "Success! Product list")
+	}
+	return common.GenerateSuccessResponse(c, products, "Success! No more products found", &common.ResponseOption{
+		HttpCode: http.StatusNoContent,
+	})
 }
 
 func (p productApi) FindBySlug(c echo.Context) error {
