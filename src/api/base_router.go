@@ -5,11 +5,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 	v1 "github.com/sajalmia381/store-api/src/api/v1"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func Routes(e *echo.Echo) {
 	e.GET("/", index)
 	e.GET("/health", health)
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	v1.Routes(e.Group("/api/v1"))
 }
 
