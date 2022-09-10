@@ -23,7 +23,7 @@ type ProductRepository interface {
 	FindAll(queryParams dtos.ProductQueryParams) ([]dtos.ProductResponseDto, common.MetaData, error)
 	FindBySlug(slug string) (model.Product, error)
 	UpdateBySlug(slug string, payload primitive.M) (model.Product, error)
-	DeleteBySlug(slug string) (*mongo.DeleteResult, error)
+	DeleteBySlug(slug string) (model.Product, error)
 }
 
 type productRepository struct {
@@ -146,7 +146,6 @@ func (p productRepository) FindAll(queryParams dtos.ProductQueryParams) ([]dtos.
 		log.Println("[ERROR]", err)
 		panic(err)
 	}
-	log.Println("objects", objects)
 	if queryParams.Limit != 0 {
 		return objects, metaData, nil
 	}
@@ -183,7 +182,7 @@ func (p productRepository) UpdateBySlug(slug string, payload primitive.M) (model
 	update := bson.M{
 		"$set": payload,
 	}
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	result := coll.FindOneAndUpdate(p.dm.Ctx, filter, update, opts)
 	var product model.Product
@@ -197,19 +196,21 @@ func (p productRepository) UpdateBySlug(slug string, payload primitive.M) (model
 	return product, nil
 }
 
-func (p productRepository) DeleteBySlug(slug string) (*mongo.DeleteResult, error) {
+func (p productRepository) DeleteBySlug(slug string) (model.Product, error) {
+	var product model.Product
 	filter := bson.D{
 		{Key: "slug", Value: slug},
 	}
 	coll := p.dm.DB.Collection(string(enums.PRODUCT_COLLECTION_NAME))
-	result, err := coll.DeleteOne(p.dm.Ctx, filter)
+	err := coll.FindOneAndDelete(p.dm.Ctx, filter).Decode(&product)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return result, errors.New("product is not exists")
+			return product, errors.New("product is not exists")
 		}
+		log.Println("mongo err", err)
 		panic(err)
 	}
-	return result, nil
+	return product, nil
 }
 
 func NewProductRepository() ProductRepository {

@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/sajalmia381/store-api/src/config"
+	"github.com/sajalmia381/store-api/src/enums"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -36,6 +38,17 @@ func (dm *DmManager) initializeConnection() {
 		return
 	}
 	db := client.Database(config.DatabaseName)
+	collectionNames, err := db.ListCollectionNames(ctx, bson.D{})
+	if err != nil {
+		log.Println("GETTING collection name err:", collectionNames)
+	}
+	for _, _name := range enums.COLLECTION_NAMES {
+		for _, dbName := range collectionNames {
+			if dbName != _name {
+				db.CreateCollection(ctx, _name)
+			}
+		}
+	}
 	dm.DB = db
 	log.Println("[INFO] Initialized Singleton DB Manager")
 }

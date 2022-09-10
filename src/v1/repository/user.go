@@ -101,7 +101,7 @@ func (r userRepository) FindByEmail(email string) (model.User, error) {
 }
 
 func (r userRepository) UpdateById(id primitive.ObjectID, payload primitive.M) (model.User, error) {
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	payload["updatedAt"] = time.Now().UTC()
 	filter := bson.D{
 		{Key: "_id", Value: id},
@@ -125,7 +125,7 @@ func (r userRepository) UpdateById(id primitive.ObjectID, payload primitive.M) (
 
 func (r userRepository) UpdateLoginTime(id primitive.ObjectID) (model.User, error) {
 	var user model.User
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	filter := bson.D{
 		{Key: "_id", Value: id},
 	}

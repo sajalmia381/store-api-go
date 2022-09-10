@@ -1,0 +1,9 @@
+__debug_bin
+.vscode
+.idea
+.git
+.dockerignore
+.gitignore
+.env
+.env2
+README.md

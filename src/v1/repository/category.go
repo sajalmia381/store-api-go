@@ -34,7 +34,7 @@ func (r categoryRepository) Store(category model.Category) (model.Category, erro
 	category.Slug = utils.GenerateUniqueSlug(category.Name, string(enums.CATEGORY_COLLECTION_NAME))
 	_, err := coll.InsertOne(r.dm.Ctx, &category)
 	if err != nil {
-		return category, nil
+		return category, err
 	}
 	return category, nil
 }
@@ -82,7 +82,7 @@ func (r categoryRepository) UpdateBySlug(slug string, payload primitive.M) (mode
 		{Key: "$set", Value: payload},
 	}
 
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	result := coll.FindOneAndUpdate(r.dm.Ctx, filter, update, opts)
 	if err := result.Decode(&category); err != nil {
@@ -125,7 +125,10 @@ func (r categoryRepository) PushProductToCategory(categoryId primitive.ObjectID,
 		}},
 	}
 	coll := r.dm.DB.Collection(string(enums.CATEGORY_COLLECTION_NAME))
-	_, err := coll.UpdateOne(r.dm.Ctx, filter, update)
+	res, err := coll.UpdateOne(r.dm.Ctx, filter, update)
+	if res.MatchedCount != 1 {
+		log.Println("Push product to category res:", res)
+	}
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return errors.New("category is not found")

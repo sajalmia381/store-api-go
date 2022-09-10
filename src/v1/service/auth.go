@@ -27,7 +27,6 @@ func (s authService) Login(payload dtos.LoginPayload) (model.User, error) {
 	if err != nil {
 		return user, errors.New("user is not found")
 	}
-
 	return user, nil
 }
 
@@ -62,6 +61,7 @@ func NewAuthService(userRepo repository.UserRepository, tokenRepo repository.Tok
 // Helper
 func mergeRegisterDataToUser(payload dtos.RegisterPayload) model.User {
 	user := model.User{
+		ID:       primitive.NewObjectID(),
 		Name:     payload.Name,
 		Email:    payload.Email,
 		Password: payload.Password,

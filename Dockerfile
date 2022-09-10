@@ -1,17 +1,16 @@
-FROM golang:1.18.5 as builder
-RUN apt-get update && apt-get install -y nocache git ca-certificates && update-ca-certificates
+FROM golang:1.18-alpine
+
 WORKDIR /app
-COPY go.mod go.sum ./
-#RUN go env -w GOPROXY="https://goproxy.io,direct"
+
+COPY go.mod ./
+COPY go.sum ./
+
 RUN go mod download
-COPY . .
-RUN go build -o /app/bin/store-api .
 
+COPY ./ ./
 
-FROM debian:buster-slim
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-WORKDIR /app
-COPY --from=builder /app/bin /app
+RUN go build -o /store-api
+
 EXPOSE 8080
-# Run the executable
-CMD ["./store-api"]
+
+CMD ["/store-api"]

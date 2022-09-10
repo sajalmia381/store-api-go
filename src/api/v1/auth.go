@@ -10,15 +10,19 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sajalmia381/store-api/src/api/common"
 	"github.com/sajalmia381/store-api/src/config"
+	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/v1/api"
 	"github.com/sajalmia381/store-api/src/v1/dtos"
+	"github.com/sajalmia381/store-api/src/v1/model"
 	"github.com/sajalmia381/store-api/src/v1/service"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type authApi struct {
-	authService service.AuthService
-	jwtService  service.JwtService
+	authService  service.AuthService
+	jwtService   service.JwtService
+	tokenService service.TokenService
 }
 
 func (a authApi) Login(c echo.Context) error {
@@ -58,11 +62,22 @@ func (a authApi) Login(c echo.Context) error {
 			HttpCode: http.StatusInternalServerError,
 		})
 	}
-	_, err = a.authService.UpdateUserLoginTime(user.ID)
-	if err != nil {
-		log.Println("Failed to update user login time", err.Error())
+	if user.Role == enums.ROLE_SUPER_ADMIN {
+		_, err = a.authService.UpdateUserLoginTime(user.ID)
+		if err != nil {
+			log.Println("Failed to update user login time", err.Error())
+		}
+		token := model.Token{
+			ID:     primitive.NewObjectID(),
+			UserId: &user.ID,
+			Type:   string(enums.REFRESH_TOKEN),
+			Token:  jwtRes.RefreshToken,
+		}
+		if _, err := a.tokenService.Store(token); err != nil {
+			log.Println("Failed to store super admin refresh token:", err.Error())
+		}
 	}
-	return common.GenerateSuccessResponse(c, jwtRes, "Success! logged in successfully")
+	return common.GenerateSuccessResponse(c, jwtRes, "Success! User logged in")
 }
 
 func (a authApi) Register(c echo.Context) error {
@@ -95,7 +110,7 @@ func (a authApi) Register(c echo.Context) error {
 			HttpCode: http.StatusInternalServerError,
 		})
 	}
-	return common.GenerateSuccessResponse(c, jwtRes, "Success! user registration successful")
+	return common.GenerateSuccessResponse(c, jwtRes, "Success! User registration successful")
 }
 
 func (a authApi) RefreshToken(c echo.Context) error {
@@ -143,9 +158,10 @@ func (a authApi) RefreshToken(c echo.Context) error {
 	return common.GenerateSuccessResponse(c, jwtRes, "Success! New tokens generated")
 }
 
-func NewAuthApi(authService service.AuthService, jwtService service.JwtService) api.AuthApi {
+func NewAuthApi(authService service.AuthService, jwtService service.JwtService, tokenService service.TokenService) api.AuthApi {
 	return &authApi{
-		authService: authService,
-		jwtService:  jwtService,
+		authService:  authService,
+		jwtService:   jwtService,
+		tokenService: tokenService,
 	}
 }

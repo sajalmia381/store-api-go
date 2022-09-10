@@ -23,7 +23,7 @@ func main() {
 
 func initDefaultUser() {
 	userService := dependency.GetUserService()
-	num := 1234567891
+	var num uint = 1234567891
 	payload := dtos.UserRegisterDTO{
 		Name:     "Anonymous User",
 		Email:    "anonymous@gmail.com",
@@ -40,12 +40,13 @@ func intSuperAdmin() {
 		if err != nil {
 			num = 1234567891
 		}
+		var menNum uint = uint(num)
 		payload := dtos.UserRegisterDTO{
 			Name:     config.SuperAdminName,
 			Email:    config.SuperAdminEmail,
 			Password: config.SuperAdminPassword,
-			Number:   &num,
+			Number:   &menNum,
 		}
-		userService.Store(payload)
+		userService.StoreSuperAdmin(payload)
 	}
 }

@@ -15,7 +15,7 @@ func Routes(g *echo.Group) {
 }
 
 func authRoutes(g *echo.Group) {
-	newAuthApi := NewAuthApi(dependency.GetAuthService(), dependency.GetJwtService())
+	newAuthApi := NewAuthApi(dependency.GetAuthService(), dependency.GetJwtService(), dependency.GetTokenService())
 	g.POST("/login", newAuthApi.Login)
 	g.POST("/register", newAuthApi.Register)
 	g.POST("/refresh", newAuthApi.RefreshToken)

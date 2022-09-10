@@ -3,6 +3,6 @@ package enums
 type TokenType string
 
 const (
-	TOKEN_REGULAR = TokenType("REGULAR")
-	TOKEN_REFRESH = TokenType("REFRESH")
+	REGULAR_TOKEN = TokenType("REGULAR_TOKEN")
+	REFRESH_TOKEN = TokenType("REFRESH_TOKEN")
 )

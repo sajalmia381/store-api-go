@@ -19,6 +19,8 @@ type UserService interface {
 	FindById(id string) (model.User, error)
 	UpdateById(id string, payload dtos.UserUpdateDto) (model.User, error)
 	DeleteById(id string) error
+	// For super admin
+	StoreSuperAdmin(payload dtos.UserRegisterDTO) (model.User, error)
 	// Fake Action
 	FakeStore(payload dtos.UserRegisterDTO) (model.User, error)
 	FakeUpdateById(id string, payload dtos.UserUpdateDto) (model.User, error)
@@ -36,6 +38,29 @@ func (s userService) Store(payload dtos.UserRegisterDTO) (model.User, error) {
 	}
 	user = mergePayloadDataToUser(payload)
 	user.Role = enums.ROLE_CUSTOMER
+	user.Status = true
+	// No dependent
+	user.ID = primitive.NewObjectID()
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println("[ERROR] convert string to hash password:", err.Error())
+		return user, err
+	}
+	user.Password = string(hashedPassword)
+	user.CreatedAt = time.Now().UTC()
+	user.UpdatedAt = time.Now().UTC()
+	newUser, err := s.repo.Store(user)
+	return newUser, err
+}
+
+func (s userService) StoreSuperAdmin(payload dtos.UserRegisterDTO) (model.User, error) {
+	var user model.User
+	_, err := s.repo.FindByEmail(payload.Email)
+	if err == nil {
+		return user, errors.New("user is exists! try with another email")
+	}
+	user = mergePayloadDataToUser(payload)
+	user.Role = enums.ROLE_SUPER_ADMIN
 	user.Status = true
 	// No dependent
 	user.ID = primitive.NewObjectID()

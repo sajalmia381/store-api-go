@@ -12,7 +12,6 @@ import (
 	"github.com/sajalmia381/store-api/src/v1/model"
 	"github.com/sajalmia381/store-api/src/v1/repository"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProductService interface {
@@ -20,7 +19,7 @@ type ProductService interface {
 	FindAll(queryParams dtos.ProductQueryParams) ([]dtos.ProductResponseDto, common.MetaData, error)
 	FindBySlug(slug string) (model.Product, error)
 	UpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error)
-	DeleteBySlug(slug string) (*mongo.DeleteResult, error)
+	DeleteBySlug(slug string) (model.Product, error)
 	// Fake
 	FakeStore(payload dtos.ProductStoreDto) (model.Product, error)
 	FakeUpdateBySlug(slug string, payload dtos.ProductUpdateDto) (model.Product, error)
@@ -75,13 +74,13 @@ func (p productService) FindBySlug(slug string) (model.Product, error) {
 func (p productService) UpdateBySlug(slug string, formData dtos.ProductUpdateDto) (model.Product, error) {
 	payload := primitive.M{}
 
-	if formData.Title == "" {
+	if formData.Title != "" {
 		payload["title"] = formData.Title
 	}
-	if formData.Price == nil {
+	if formData.Price != nil {
 		payload["price"] = &formData.Price
 	}
-	if formData.Description == "" {
+	if formData.Description != "" {
 		payload["description"] = formData.Description
 	}
 	if formData.Category != nil {
@@ -91,27 +90,27 @@ func (p productService) UpdateBySlug(slug string, formData dtos.ProductUpdateDto
 		payload["slug"] = utils.GenerateUniqueSlug(formData.Title, string(enums.PRODUCT_COLLECTION_NAME), slug)
 	}
 
-	// isCategoryChange := formData.Category.Hex() != "" && formData.Category.Hex() != product.Category.Hex()
-	// log.Println(isCategoryChange)
 	product, err := p.repo.UpdateBySlug(slug, payload)
-	// if err == nil {
-	// 	log.Println(formData.Category, formData.Category)
-	// 	log.Println(formData.Category.Hex() != "" && formData.Category.Hex() != product.Category.Hex())
-	// 	if isCategoryChange {
-	// 		go func() {
-	// 			err := p.categoryRepo.ChangeProductInCategory(*product.Category, *formData.Category, product.ID)
-	// 			if err != nil {
-	// 				log.Println("[ERROR update product category change]:", err.Error())
-	// 			}
-	// 		}()
-	// 	}
-	// }
+	isCategoryChange := formData.Category.Hex() != "" && formData.Category.Hex() != product.Category.Hex()
+	log.Println(isCategoryChange)
+	if err == nil {
+		log.Println(formData.Category, formData.Category)
+		log.Println(formData.Category.Hex() != "" && formData.Category.Hex() != product.Category.Hex())
+		// TODO: Fix product change to push category
+		if isCategoryChange {
+			go func() {
+				err := p.categoryRepo.ChangeProductInCategory(*product.Category, *formData.Category, product.ID)
+				if err != nil {
+					log.Println("[ERROR update product category change]:", err.Error())
+				}
+			}()
+		}
+	}
 	return product, err
 }
 
-func (p productService) DeleteBySlug(slug string) (*mongo.DeleteResult, error) {
-	var product model.Product
-	result, err := p.repo.DeleteBySlug(slug)
+func (p productService) DeleteBySlug(slug string) (model.Product, error) {
+	product, err := p.repo.DeleteBySlug(slug)
 	if err == nil {
 		if product.Category.Hex() != "" {
 			go func() {
@@ -121,9 +120,8 @@ func (p productService) DeleteBySlug(slug string) (*mongo.DeleteResult, error) {
 				}
 			}()
 		}
-
 	}
-	return result, err
+	return product, err
 }
 
 func (p productService) FakeStore(payload dtos.ProductStoreDto) (model.Product, error) {

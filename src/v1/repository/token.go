@@ -28,7 +28,7 @@ type tokenRepository struct {
 func (r tokenRepository) Store(payload model.Token) (model.Token, error) {
 	payload.CreatedAt = time.Now().UTC()
 	if payload.Type == "" {
-		payload.Type = string(enums.TOKEN_REGULAR)
+		payload.Type = string(enums.REFRESH_TOKEN)
 	}
 	coll := r.dm.DB.Collection(TokenCollectionName)
 	_, err := coll.InsertOne(r.dm.Ctx, payload)

@@ -12,7 +12,7 @@ type User struct {
 	Name        string             `json:"name" bson:"name"`
 	Email       string             `json:"email" bson:"email"`
 	Password    string             `json:"password" bson:"password"`
-	Number      *int               `json:"number" bson:"number"`
+	Number      *uint              `json:"number" bson:"number"`
 	Status      bool               `json:"status" bson:"status"`
 	Role        enums.Role         `json:"role" bson:"role"`
 	LastLoginAt *time.Time         `json:"lastLoginAt" bson:"lastLoginAt"`

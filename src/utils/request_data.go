@@ -30,5 +30,6 @@ func GetRequestData(c echo.Context) (dtos.JwtPayload, error) {
 
 func IsSuperAdmin(c echo.Context) bool {
 	requesterData, err := GetRequestData(c)
+	log.Println("Utils Requester file! Is Super admin:", err == nil && requesterData.Role == string(enums.ROLE_SUPER_ADMIN))
 	return err == nil && requesterData.Role == string(enums.ROLE_SUPER_ADMIN)
 }

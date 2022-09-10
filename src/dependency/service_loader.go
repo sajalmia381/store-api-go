@@ -5,6 +5,10 @@ import (
 	"github.com/sajalmia381/store-api/src/v1/service"
 )
 
+func GetTokenService() service.TokenService {
+	return service.NewTokenService(repository.NewTokenRepository())
+}
+
 func GetAuthService() service.AuthService {
 	return service.NewAuthService(repository.NewUserRepository(), repository.NewTokenRepository())
 }
