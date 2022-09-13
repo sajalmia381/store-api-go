@@ -22,12 +22,9 @@ func New() *echo.Echo {
 	echoInstance.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		// Skipping logging for health checking api
 		Skipper: func(c echo.Context) bool {
-			if c.Request().RequestURI == "/health" {
-				return true
-			}
-			return false
+			return c.Request().RequestURI == "/health"
 		},
-		Format: "[${time_rfc3339}] method=${method}, uri=${uri}, status=${status}, latency=${latency_human}\n",
+		Format: "[${time_rfc3339}] method=${method}, uri=${uri}, status=${status}, latency=${latency_human} remote_ip=${remote_ip} user_agent=${user_agent}\n",
 	}))
 
 	echoInstance.Use(middleware.Recover())
@@ -36,6 +33,5 @@ func New() *echo.Echo {
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
-
 	return echoInstance
 }
