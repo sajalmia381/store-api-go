@@ -24,7 +24,7 @@ func New() *echo.Echo {
 		Skipper: func(c echo.Context) bool {
 			return c.Request().RequestURI == "/health"
 		},
-		Format: "[${time_rfc3339}] method=${method}, uri=${uri}, status=${status}, latency=${latency_human} remote_ip=${remote_ip} user_agent=${user_agent}\n",
+		Format: "[${time_rfc3339}] method=${method}, uri=${uri}, status=${status}, latency=${latency_human} remote_ip=${remote_ip}\n",
 	}))
 
 	echoInstance.Use(middleware.Recover())

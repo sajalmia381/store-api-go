@@ -2,11 +2,12 @@ package config
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"log"
-	"time"
 )
 
 var mongoClient *mongo.Client
@@ -15,6 +16,7 @@ var isDatabaseConnected bool
 func InitDBConnection() bool {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(DBConnectionString))
 	if err != nil {
+		log.Println("[ERROR] Database Connection Failed: ", err)
 		return false
 	}
 	mongoClient = client
