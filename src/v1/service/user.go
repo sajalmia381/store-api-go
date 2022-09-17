@@ -17,6 +17,7 @@ type UserService interface {
 	Store(payload dtos.UserRegisterDTO) (model.User, error)
 	FindAll(filterData dtos.UserQuery) ([]model.User, error)
 	FindById(id string) (model.User, error)
+	FindByEmail(email string) (model.User, error)
 	UpdateById(id string, payload dtos.UserUpdateDto) (model.User, error)
 	DeleteById(id string) error
 	// For super admin
@@ -31,12 +32,7 @@ type userService struct {
 }
 
 func (s userService) Store(payload dtos.UserRegisterDTO) (model.User, error) {
-	var user model.User
-	_, err := s.repo.FindByEmail(payload.Email)
-	if err == nil {
-		return user, errors.New("user is exists! try with another email")
-	}
-	user = mergePayloadDataToUser(payload)
+	user := mergePayloadDataToUser(payload)
 	user.Role = enums.ROLE_CUSTOMER
 	user.Status = true
 	// No dependent
@@ -54,12 +50,8 @@ func (s userService) Store(payload dtos.UserRegisterDTO) (model.User, error) {
 }
 
 func (s userService) StoreSuperAdmin(payload dtos.UserRegisterDTO) (model.User, error) {
-	var user model.User
-	_, err := s.repo.FindByEmail(payload.Email)
-	if err == nil {
-		return user, errors.New("user is exists! try with another email")
-	}
-	user = mergePayloadDataToUser(payload)
+
+	user := mergePayloadDataToUser(payload)
 	user.Role = enums.ROLE_SUPER_ADMIN
 	user.Status = true
 	// No dependent
@@ -88,6 +80,11 @@ func (s userService) FindById(id string) (model.User, error) {
 		return user, errors.New("invalid user id")
 	}
 	user, err = s.repo.FindById(_id)
+	return user, err
+}
+
+func (s userService) FindByEmail(email string) (model.User, error) {
+	user, err := s.repo.FindByEmail(email)
 	return user, err
 }
 

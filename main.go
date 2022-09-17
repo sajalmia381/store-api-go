@@ -23,6 +23,10 @@ func main() {
 
 func initDefaultUser() {
 	userService := dependency.GetUserService()
+	_, err := userService.FindByEmail("anonymous@gmail.com")
+	if err == nil {
+		return
+	}
 	var num uint = 1234567891
 	payload := dtos.UserRegisterDTO{
 		Name:     "Anonymous User",
@@ -36,6 +40,10 @@ func initDefaultUser() {
 func intSuperAdmin() {
 	if config.SuperAdminEmail != "" {
 		userService := dependency.GetUserService()
+		_, err := userService.FindByEmail(config.SuperAdminEmail)
+		if err == nil {
+			return
+		}
 		num, err := strconv.Atoi(config.SuperAdminNumber)
 		if err != nil {
 			num = 1234567891

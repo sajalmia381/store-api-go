@@ -43,10 +43,70 @@ func (dm *DmManager) initializeConnection() {
 		log.Println("GETTING collection name err:", collectionNames)
 	}
 	for _, _name := range enums.COLLECTION_NAMES {
-		for _, dbName := range collectionNames {
-			if dbName != _name {
-				db.CreateCollection(ctx, _name)
+		isExists := false
+		for _, collName := range collectionNames {
+			if collName == _name {
+				isExists = true
+				break
 			}
+		}
+		if !isExists {
+			db.CreateCollection(ctx, _name)
+			switch _name {
+			case string(enums.USER_COLLECTION_NAME):
+				{
+					indexModel := mongo.IndexModel{
+						Keys:    bson.D{{Key: "email", Value: 1}},
+						Options: options.Index().SetUnique(true),
+					}
+					// indexModelNumber := mongo.IndexModel{
+					// 	Keys:    bson.D{{Key: "number", Value: 1}},
+					// 	Options: options.Index().SetUnique(true),
+					// }
+					_names, _ := db.Collection(_name).Indexes().CreateMany(context.Background(), []mongo.IndexModel{
+						indexModel, // indexModelNumber,
+					})
+					log.Println("Index created! indexNames: ", _names)
+				}
+			case string(enums.CART_COLLECTION_NAME):
+				{
+					indexModel := mongo.IndexModel{
+						Keys:    bson.D{{Key: "userId", Value: 1}},
+						Options: options.Index().SetUnique(true),
+					}
+					_name, _ := db.Collection(_name).Indexes().CreateOne(context.Background(), indexModel)
+					log.Println("Index created! indexName: ", _name)
+				}
+			case string(enums.PRODUCT_COLLECTION_NAME):
+				{
+					indexModel := mongo.IndexModel{
+						Keys:    bson.D{{Key: "slug", Value: 1}},
+						Options: options.Index().SetUnique(true),
+					}
+					_name, _ := db.Collection(_name).Indexes().CreateOne(context.Background(), indexModel)
+					log.Println("Index created! indexName: ", _name)
+				}
+			case string(enums.CATEGORY_COLLECTION_NAME):
+				{
+					indexModel := mongo.IndexModel{
+						Keys:    bson.D{{Key: "slug", Value: 1}},
+						Options: options.Index().SetUnique(true),
+					}
+					_name, _ := db.Collection(_name).Indexes().CreateOne(context.Background(), indexModel)
+					log.Println("Index created! indexName: ", _name)
+				}
+			case string(enums.TOKEN_COLLECTION_NAME):
+				{
+					indexModel := mongo.IndexModel{
+						Keys:    bson.D{{Key: "token", Value: 1}},
+						Options: options.Index().SetUnique(true),
+					}
+					_name, _ := db.Collection(_name).Indexes().CreateOne(context.Background(), indexModel)
+
+					log.Println("Index created! indexName: ", _name)
+				}
+			}
+
 		}
 	}
 	dm.DB = db
