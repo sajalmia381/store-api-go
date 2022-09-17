@@ -34,6 +34,7 @@ func (r categoryRepository) Store(category model.Category) (model.Category, erro
 	category.Slug = utils.GenerateUniqueSlug(category.Name, string(enums.CATEGORY_COLLECTION_NAME))
 	_, err := coll.InsertOne(r.dm.Ctx, &category)
 	if err != nil {
+		log.Println("[ERROR] Category Store err: ", err)
 		return category, err
 	}
 	return category, nil
@@ -86,11 +87,10 @@ func (r categoryRepository) UpdateBySlug(slug string, payload primitive.M) (mode
 
 	result := coll.FindOneAndUpdate(r.dm.Ctx, filter, update, opts)
 	if err := result.Decode(&category); err != nil {
-		// Document No exception implement in top
 		if err == mongo.ErrNoDocuments {
 			return category, errors.New("category is not exists")
 		}
-		log.Println("[ERROR] Delete document count", err)
+		log.Println("[ERROR] Update document count", err)
 		panic(err)
 	}
 	return category, nil

@@ -34,6 +34,7 @@ func (r userRepository) Store(user model.User) (model.User, error) {
 	_, err := coll.InsertOne(r.dm.Ctx, user)
 	if err != nil {
 		log.Println("[ERROR] Insert document:", err.Error())
+		// log.Printf("type %T", err)
 		return user, err
 	}
 	return user, nil

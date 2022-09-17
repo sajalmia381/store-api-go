@@ -38,6 +38,7 @@ func (p productRepository) Store(product model.Product) (model.Product, error) {
 	product.Slug = utils.GenerateUniqueSlug(product.Title, string(enums.PRODUCT_COLLECTION_NAME))
 	_, err := coll.InsertOne(p.dm.Ctx, &product)
 	if err != nil {
+		log.Println("[ERROR] Product Store err: ", err)
 		return product, err
 	}
 	return product, nil
