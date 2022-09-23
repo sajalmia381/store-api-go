@@ -11,9 +11,13 @@ import (
 	"github.com/sajalmia381/store-api/src/config"
 )
 
-func AuthMiddlewareConfig() middleware.JWTConfig {
+func AttachUserMiddlewareConfig() middleware.JWTConfig {
 	signingKey := []byte(config.JwtRegularSecretKey)
 	config := middleware.JWTConfig{
+		Skipper: func(c echo.Context) bool {
+			accessToken := c.Request().Header.Get("Authorization")
+			return accessToken == ""
+		},
 		TokenLookup: "header:Authorization", // Default
 		ParseTokenFunc: func(auth string, c echo.Context) (interface{}, error) {
 			keyFunc := func(t *jwt.Token) (interface{}, error) {

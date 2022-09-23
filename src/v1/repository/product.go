@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sajalmia381/store-api/src/api/common"
+	"github.com/sajalmia381/store-api/src/config"
 	"github.com/sajalmia381/store-api/src/enums"
 	"github.com/sajalmia381/store-api/src/utils"
 	"github.com/sajalmia381/store-api/src/v1/db"
@@ -32,7 +33,7 @@ type productRepository struct {
 
 func (p productRepository) Store(product model.Product) (model.Product, error) {
 	if product.CreatedBy == "" {
-		product.CreatedBy = "anonymous@gmail.com"
+		product.CreatedBy = config.DefaultUserEmail
 	}
 	coll := p.dm.DB.Collection(string(enums.PRODUCT_COLLECTION_NAME))
 	product.Slug = utils.GenerateUniqueSlug(product.Title, string(enums.PRODUCT_COLLECTION_NAME))
@@ -114,6 +115,7 @@ func (p productRepository) FindAll(queryParams dtos.ProductQueryParams) ([]dtos.
 			"preserveNullAndEmptyArrays": true,
 		}},
 	}
+	
 	userLookup := bson.D{
 		{
 			Key: "$lookup", Value: bson.M{
