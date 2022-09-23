@@ -23,18 +23,24 @@ func main() {
 
 func initDefaultUser() {
 	userService := dependency.GetUserService()
-	_, err := userService.FindByEmail("anonymous@gmail.com")
+	user, err := userService.FindByEmail(config.DefaultUserEmail)
 	if err == nil {
+		config.DefaultUserId = &user.ID
 		return
 	}
-	var num uint = 1234567891
-	payload := dtos.UserRegisterDTO{
-		Name:     "Anonymous User",
-		Email:    "anonymous@gmail.com",
-		Password: "simple_password",
-		Number:   &num,
+	num, err := strconv.Atoi(config.SuperAdminNumber)
+	if err != nil {
+		num = 1234567891
 	}
-	userService.Store(payload)
+	var menNum uint = uint(num)
+	payload := dtos.UserRegisterDTO{
+		Name:     config.DefaultUserName,
+		Email:    config.DefaultUserEmail,
+		Password: config.DefaultUserPassword,
+		Number:   &menNum,
+	}
+	user, _ = userService.Store(payload)
+	config.DefaultUserId = &user.ID
 }
 
 func intSuperAdmin() {
@@ -46,7 +52,7 @@ func intSuperAdmin() {
 		}
 		num, err := strconv.Atoi(config.SuperAdminNumber)
 		if err != nil {
-			num = 1234567891
+			num = 1234567830
 		}
 		var menNum uint = uint(num)
 		payload := dtos.UserRegisterDTO{
