@@ -41,7 +41,7 @@ func (a authApi) Login(c echo.Context) error {
 		return common.GenerateErrorResponse(c, "[ERROR]: You were disabled!", "Please contact to admin for active you account!")
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
-		return common.GenerateErrorResponse(c, "[ERROR]: Password is not matched!", err.Error())
+		return common.GenerateErrorResponse(c, "[ERROR] Password is not matched!", "Password is wrong!")
 	}
 	jwtPayload := dtos.JwtPayload{
 		ID:    user.ID,
