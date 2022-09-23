@@ -7,6 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sajalmia381/store-api/src/enums"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var RunMode string
@@ -29,6 +30,13 @@ var SuperAdminName string
 var SuperAdminEmail string
 var SuperAdminPassword string
 var SuperAdminNumber string
+
+// Default User
+var DefaultUserId *primitive.ObjectID
+var DefaultUserName string
+var DefaultUserEmail string
+var DefaultUserNumber string
+var DefaultUserPassword string
 
 func IntVariables() {
 	RunMode = os.Getenv("ENVIRONMENT")
@@ -68,4 +76,10 @@ func IntVariables() {
 	SuperAdminEmail = os.Getenv("SUPER_ADMIN_EMAIL")
 	SuperAdminPassword = os.Getenv("SUPER_ADMIN_PASSWORD")
 	SuperAdminNumber = os.Getenv("SUPER_ADMIN_NUMBER")
+
+	// Default User
+	DefaultUserName = "Anonymous User"
+	DefaultUserEmail = "anonymous@gmail.com"
+	DefaultUserNumber = "1234567891"
+	DefaultUserPassword = "simple_password"
 }

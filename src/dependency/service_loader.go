@@ -28,3 +28,7 @@ func GetCategoryService() service.CategoryService {
 func GetProductService() service.ProductService {
 	return service.NewProductService(repository.NewProductRepository(), repository.NewCategoryRepository())
 }
+
+func GetCartService() service.CartService {
+	return service.NewCartService(repository.NewCartRepository())
+}
