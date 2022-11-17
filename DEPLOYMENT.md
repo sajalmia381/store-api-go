@@ -6,11 +6,8 @@
 
 ### - Connect EC2 Machine
 ```bash
-# AMD T2 Micro VPC
-sudo ssh -i ~/Desktop/pem/virginaStoreApi.pem ubuntu@ec2-54-198-175-185.compute-1.amazonaws.com
-
 # ARM VPC
-sudo ssh -i ~/Desktop/pem/storeApi.pem ubuntu@ec2-52-66-223-120.ap-south-1.compute.amazonaws.com
+sudo ssh -i ~/Desktop/pem/storeApi.pem ubuntu@ec2-3-7-68-106.ap-south-1.compute.amazonaws.com
 ```
 
 ### - Transfert Data To EC2 Machine
@@ -21,8 +18,8 @@ sudo chown ubuntu:ubuntu /opt/front-end
 
 # Transfer data to machine 
 sudo scp -i <path-to-key-file> -r <path-to-local-dist-folder>/* ubuntu@<domain name>:/opt/front-end
-sudo scp -i ~/Desktop/pem/storeApi.pem -r ./dump/* ubuntu@ec2-52-66-223-120.ap-south-1.compute.amazonaws.com:/opt/local-data
-sudo scp -i ~/Desktop/pem/storeApi.pem -r ./dist/store-admin/* ubuntu@ec2-52-66-223-120.ap-south-1.compute.amazonaws.com
+sudo scp -i ~/Desktop/pem/storeApi.pem -r ./dump/* ubuntu@ec2-3-7-68-106.ap-south-1.compute.amazonaws.com:/opt/local-data
+sudo scp -i ~/Desktop/pem/storeApi.pem -r ./dist/store-admin/* ubuntu@ec2-3-7-68-106.ap-south-1.compute.amazonaws.com
 :/usr/share/nginx/html
 ```
 
@@ -137,7 +134,7 @@ server {
 
 ### - Deploy node-api
 ```bash
-sudo nano /etc/nginx/sites-available/default
+sudo nano /etc/nginx/sites-available/storeApiNode
 ```
 ```
 server {
