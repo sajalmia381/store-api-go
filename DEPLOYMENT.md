@@ -149,6 +149,7 @@ server {
 
   server_name api.storerestapi.com;
   
+  # GO Application
   location /v1 {
       proxy_pass http://localhost:8080;
       proxy_http_version 1.1;
