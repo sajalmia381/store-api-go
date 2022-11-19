@@ -2,4 +2,3 @@
 __debug_bin
 
 .env
-docker-compose.*

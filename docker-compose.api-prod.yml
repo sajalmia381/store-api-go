@@ -1,0 +1,39 @@
+version: '3'
+services:
+  go-app:
+    image: storerestapi/store-api-go:latest
+    container_name: store-api-go
+    restart: always
+    environment:
+      - ENVIRONMENT=PRODUCTION
+      - SERVER_PORT=8080
+      - MONGO_SERVER=database
+      - MONGO_PORT=27017
+      - MONGO_USERNAME=<USERNAME>
+      - MONGO_PASSWORD=hello123
+      - DATABASE_NAME=store-api-go
+      - DATABASE=MONGO
+      - PRIVATE_KEY="blank"
+      - PUBLIC_KEY="blank"
+
+      - REGULAR_TOKEN_LIFETIME=30000000
+      # JWT_SECRET_KEY=V23MHHqqzK2mkERkUGouR0ILxeIf5zZEzyaHFaRKmDE0CbhV7TudpBFS9o5r9Mlq
+      # JWT_REFRESH_KEY=ipfhUCFRZ4fce7GWaatUZMQbQ655sygRq0KUATOUX4VB1RFjaUtl6lfKmlP4AHg8
+      - JWT_SECRET_KEY=V23MHHqqzK2mkERkUGouR0ILxeIf5zZEzyaHFaRKmDE0CbhV7TudpBFS9o5r9Mlq
+      - JWT_REFRESH_KEY=ipfhUCFRZ4fce7GWaatUZMQbQ655sygRq0KUATOUX4VB1RFjaUtl6lfKmlP4AHg8
+
+      # Super Admin
+      - SUPER_ADMIN_NAME="Super Admin"
+      - SUPER_ADMIN_EMAIL="superadmin@gmail.com"
+      - SUPER_ADMIN_PASSWORD="test"
+      - SUPER_ADMIN_NUMBER="1234567890"
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    command: [ "/store-api" ]
+    networks:
+      - store-network
+networks:
+  store-network:
+    external: true
