@@ -7,6 +7,8 @@
 ### - Connect EC2 Machine
 ```bash
 # ARM VPC
+sudo ssh -i ~/Desktop/pem/storeApi.pem ubuntu@ec2-52-66-223-120.ap-south-1.compute.amazonaws.com
+# NEW ARM VPC
 sudo ssh -i ~/Desktop/pem/storeApi.pem ubuntu@ec2-3-7-68-106.ap-south-1.compute.amazonaws.com
 ```
 
@@ -15,6 +17,8 @@ sudo ssh -i ~/Desktop/pem/storeApi.pem ubuntu@ec2-3-7-68-106.ap-south-1.compute.
 # Create folder and give permission
 sudo mkdir /opt/front-end
 sudo chown ubuntu:ubuntu /opt/front-end
+sudo chown ubuntu:ubuntu /usr/share/nginx/html
+
 
 # Transfer data to machine 
 sudo scp -i <path-to-key-file> -r <path-to-local-dist-folder>/* ubuntu@<domain name>:/opt/front-end
@@ -135,6 +139,7 @@ server {
 ### - Deploy node-api
 ```bash
 sudo nano /etc/nginx/sites-available/storeApiNode
+sudo ln -s /etc/nginx/sites-available/storeApiNode /etc/nginx/sites-enabled/storeApiNode
 ```
 ```
 server {
@@ -167,14 +172,12 @@ server {
 ```
 sudo add-apt-repository ppa:certbot/certbot
 sudo apt-get update
-sudo apt-get install python-certbot-nginx
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d storerestapi.com -d api.storerestapi.com
 
 # Only valid for 90 days, test the renewal process with
 certbot renew --dry-run
 ```
-
-#### Alternative
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
