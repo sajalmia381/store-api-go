@@ -2,7 +2,6 @@ package v1
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sajalmia381/store-api/src/api/common"
@@ -58,9 +57,7 @@ func (p productApi) FindAll(c echo.Context) error {
 	if len(products) > 0 {
 		return common.GenerateSuccessResponse(c, products, "Success! Product list")
 	}
-	return common.GenerateSuccessResponse(c, products, "Success! No more products found", &common.ResponseOption{
-		HttpCode: http.StatusNoContent,
-	})
+	return common.GenerateSuccessResponse(c, products, "Success! No more products found")
 }
 
 func (p productApi) FindBySlug(c echo.Context) error {
