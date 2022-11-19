@@ -10,7 +10,7 @@ import (
 func Routes(e *echo.Echo) {
 	e.GET("/", index)
 	e.GET("/health", health)
-	v1.Routes(e.Group("/api")) // /v1
+	v1.Routes(e) // /v1
 }
 
 func index(c echo.Context) error {
