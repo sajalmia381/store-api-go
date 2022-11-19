@@ -7,13 +7,13 @@ import (
 	"github.com/sajalmia381/store-api/src/dependency"
 )
 
-func Routes(e *echo.Echo) {
-	authRoutes(e.Group("/auth"))
-	userRoutes(e.Group("/users"))
-	categoryRoutes(e.Group("/categories"))
-	productRoutes(e.Group("/products"))
-	cartCrudRoutes(e.Group("/carts"))
-	cartRequesterRoutes(e.Group("/cart"))
+func Routes(g *echo.Group) {
+	authRoutes(g.Group("/auth"))
+	userRoutes(g.Group("/users"))
+	categoryRoutes(g.Group("/categories"))
+	productRoutes(g.Group("/products"))
+	cartCrudRoutes(g.Group("/carts"))
+	cartRequesterRoutes(g.Group("/cart"))
 }
 
 func authRoutes(g *echo.Group) {
