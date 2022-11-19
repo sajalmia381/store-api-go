@@ -64,7 +64,7 @@ func IntVariables() {
 		DBConnectionString = "mongodb://" + MongoUsername + ":" + MongoPassword + "@" + MongoServer + ":" + MongoPort
 	}
 
-	fmt.Println("DB Conn String: ", DBConnectionString)
+	fmt.Printf("DB Username: %s, DB Server: %s, DB Port: %s", MongoUsername, MongoServer, MongoPort)
 
 	// JWT
 	JwtRegularSecretKey = os.Getenv("JWT_SECRET_KEY")
