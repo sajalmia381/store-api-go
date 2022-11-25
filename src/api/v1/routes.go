@@ -36,7 +36,7 @@ func userRoutes(g *echo.Group) {
 func categoryRoutes(g *echo.Group) {
 	newCategoryApi := NewCategoryApi(dependency.GetCategoryService())
 	g.Use(middleware.JWTWithConfig(custom_middleware.AttachUserMiddlewareConfig()))
-	g.GET("/all", newCategoryApi.FindAll)
+	g.GET("", newCategoryApi.FindAll)
 	g.GET("/:slug", newCategoryApi.FindBySlug)
 	g.PUT("/:slug", newCategoryApi.UpdateBySlug)
 	g.DELETE("/:slug", newCategoryApi.DeleteBySlug)
