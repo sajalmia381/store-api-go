@@ -10,7 +10,7 @@ services:
       - MONGO_SERVER=database
       - MONGO_PORT=27017
       - MONGO_USERNAME=<USERNAME>
-      - MONGO_PASSWORD=hello123
+      - MONGO_PASSWORD=<PASSWORD>
       - DATABASE_NAME=store-api-go
       - DATABASE=MONGO
       - PRIVATE_KEY="blank"
