@@ -8,9 +8,9 @@ import (
 )
 
 func Routes(e *echo.Echo) {
-	e.GET("/", index)
-	e.GET("/health", health)
-	v1.Routes(e.Group("")) // /v1
+	e.GET("/v1/", index)
+	e.GET("/v1/health", health)
+	v1.Routes(e.Group("/v1"))
 }
 
 func index(c echo.Context) error {
