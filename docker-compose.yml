@@ -10,7 +10,7 @@ services:
       - MONGO_SERVER=database
       - MONGO_PORT=27017
       - MONGO_USERNAME=root
-      - MONGO_PASSWORD=hello123
+      - MONGO_PASSWORD=gCrm4Q8V8e
       - DATABASE_NAME=store-api-go
       - DATABASE=MONGO
       - PRIVATE_KEY="blank"
@@ -41,7 +41,7 @@ services:
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: hello123
+      MONGO_INITDB_ROOT_PASSWORD: gCrm4Q8V8e
     image: mongo
     ports:
       - "27018:27017"
