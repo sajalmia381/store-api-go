@@ -164,7 +164,7 @@ server {
     proxy_set_header X-Real-IP  $remote_addr;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header Host $host;
-    proxy_pass http://localhost:8080/v1;
+    proxy_pass http://localhost:8080;
   }
 
   # Check health
