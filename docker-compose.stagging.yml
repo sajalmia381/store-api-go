@@ -1,7 +1,7 @@
 version: '3'
 services:
   go-app:
-    build: .
+    image: storerestapi/store-api-go:latest
     container_name: store-api-go
     restart: always
     environment:
@@ -9,22 +9,22 @@ services:
       - SERVER_PORT=8080
       - MONGO_SERVER=database
       - MONGO_PORT=27017
-      - MONGO_USERNAME=''
-      - MONGO_PASSWORD=''
-      - DATABASE_NAME=''
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE=MONGO
       - PRIVATE_KEY="blank"
       - PUBLIC_KEY="blank"
 
       - REGULAR_TOKEN_LIFETIME=30000000
-      - JWT_SECRET_KEY=''
-      - JWT_REFRESH_KEY=''
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_REFRESH_KEY=${JWT_REFRESH_KEY}
 
       # Super Admin
-      - SUPER_ADMIN_NAME=''
-      - SUPER_ADMIN_EMAIL=''
-      - SUPER_ADMIN_PASSWORD=''
-      - SUPER_ADMIN_NUMBER=''
+      - SUPER_ADMIN_NAME=${SUPER_ADMIN_NAME}
+      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL}
+      - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD}
+      - SUPER_ADMIN_NUMBER=${SUPER_ADMIN_NUMBER}
     ports:
       - "8080:8080"
     expose:
