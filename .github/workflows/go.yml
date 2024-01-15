@@ -13,7 +13,7 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/store-api-go
 
 jobs:
-  Build-App:
+  Build-And-Push:
     runs-on: ubuntu-latest
 
     steps:
