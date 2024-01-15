@@ -1,13 +1,13 @@
 version: '3'
 services:
   go-app:
-    build: .
+    image: storerestapi/store-api-go:latest
     container_name: store-api-go
     restart: always
     environment:
       - ENVIRONMENT=PRODUCTION
       - SERVER_PORT=8080
-      - MONGO_SERVER=localhost
+      - MONGO_SERVER=database
       - MONGO_PORT=27017
       - MONGO_USERNAME=${MONGO_USERNAME}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
@@ -30,12 +30,21 @@ services:
     expose:
       - 8080
     command: [ "/store-api" ]
-    depends_on:
-      - database
     networks:
       - store-network
-volumes:
-  mongo-db:
+  database:
+    container_name: store-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: test
+    image: mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-db:/data/db
+    networks:
+      - store-network
 networks:
   store-network:
-    driver: bridge
+    external: true

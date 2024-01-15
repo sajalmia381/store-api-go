@@ -1,6 +1,2 @@
 .idea
 __debug_bin
-
-.env
-
-# docker-compose.*
